@@ -8,14 +8,15 @@ ARG wg_tools_tag=v1.0.20210914
 
 RUN apk add --update git build-base libmnl-dev iptables
 
-RUN git clone https://git.zx2c4.com/wireguard-go && \
+RUN git clone https://github.com/WireGuard/wireguard-go && \
     cd wireguard-go && \
     git checkout $wg_go_tag && \
+    sed -i 's/go build -v -o "$@"/go build -ldflags="-s -w" -v -o "$@"/' Makefile && \
     make && \
     make install
 
 ENV WITH_WGQUICK=yes
-RUN git clone https://git.zx2c4.com/wireguard-tools && \
+RUN git clone https://github.com/WireGuard/wireguard-tools && \
     cd wireguard-tools && \
     git checkout $wg_tools_tag && \
     cd src && \
@@ -23,7 +24,7 @@ RUN git clone https://git.zx2c4.com/wireguard-tools && \
     make install
 
 COPY healthcheck.go /go/src/healthcheck.go
-RUN go build -o /go/bin/healthcheck /go/src/healthcheck.go
+RUN go build -ldflags="-s -w" -o /go/bin/healthcheck /go/src/healthcheck.go
 
 FROM alpine:${ALPINE_VERSION}
 
